@@ -6,7 +6,8 @@ import clientPromise from '@/lib/mongodb'
 
 export async function POST(req) {
     const { username, password } = await req.json()
-
+    // Add this line to check if JWT_SECRET is set
+    console.log('JWT_SECRET:', process.env.JWT_SECRET)
     try {
         const client = await clientPromise
         const db = client.db('weekend_football_matcher')

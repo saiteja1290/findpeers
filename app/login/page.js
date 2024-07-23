@@ -19,7 +19,7 @@ export default function Login() {
         if (response.ok) {
             const data = await response.json()
             localStorage.setItem('token', data.token)
-            router.push('/dashboard')
+            router.push('/dashboard') // Redirect to dashboard after successful login
         } else {
             alert('Login failed')
         }
