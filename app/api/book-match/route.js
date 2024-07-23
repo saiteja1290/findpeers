@@ -34,37 +34,52 @@ export async function POST(req) {
         // Check if the user has already booked this slot
         const existingBooking = await slotsCollection.findOne({
             date: date,
-            [`slots.${timeSlot}`]: new ObjectId(userId)
+            [`slots.${timeSlot}.players`]: new ObjectId(userId)
         })
 
         if (existingBooking) {
             return NextResponse.json({ error: 'You have already booked this slot' }, { status: 400 })
         }
 
-        // Check if the slot is already full
-        const slot = await slotsCollection.findOne({ date: date })
-        if (slot && slot.slots[timeSlot] && slot.slots[timeSlot].length >= 8) {
-            return NextResponse.json({ error: 'This slot is already full' }, { status: 400 })
+        // Get the current slot document
+        const slotDocument = await slotsCollection.findOne({ date: date })
+
+        let groupIndex = 0
+        let updated = false
+
+        if (slotDocument && slotDocument.slots[timeSlot]) {
+            // Find a group with less than 8 players
+            groupIndex = slotDocument.slots[timeSlot].findIndex(group => group.players.length < 8)
+
+            if (groupIndex !== -1) {
+                // Add the user to an existing group
+                const result = await slotsCollection.updateOne(
+                    { date: date },
+                    { $addToSet: { [`slots.${timeSlot}.${groupIndex}.players`]: new ObjectId(userId) } }
+                )
+                updated = result.modifiedCount > 0
+            }
         }
 
-        // Update the slot document, adding the user to the appropriate time slot
-        const result = await slotsCollection.updateOne(
-            { date: date },
-            {
-                $addToSet: { [`slots.${timeSlot}`]: new ObjectId(userId) }
-            },
-            { upsert: true }
-        )
+        if (!updated) {
+            // Create a new group
+            const result = await slotsCollection.updateOne(
+                { date: date },
+                {
+                    $push: {
+                        [`slots.${timeSlot}`]: {
+                            groupNumber: slotDocument ? slotDocument.slots[timeSlot]?.length + 1 : 1,
+                            players: [new ObjectId(userId)]
+                        }
+                    }
+                },
+                { upsert: true }
+            )
+            updated = result.modifiedCount > 0 || result.upsertedCount > 0
+        }
 
-        if (result.modifiedCount === 0 && result.upsertedCount === 0) {
+        if (!updated) {
             return NextResponse.json({ error: 'Booking failed' }, { status: 400 })
-        }
-
-        // Check if this booking completed a group of 8
-        const updatedSlot = await slotsCollection.findOne({ date: date })
-        if (updatedSlot.slots[timeSlot].length === 8) {
-            // Here you could trigger notifications or other actions when a group is formed
-            console.log(`A group of 8 has been formed for ${date} at ${timeSlot}`)
         }
 
         return NextResponse.json({ message: 'Booking successful' }, { status: 201 })

@@ -50,11 +50,11 @@ export default function Groups() {
             {Object.entries(groups).map(([timeSlot, groupsList]) => (
                 <div key={timeSlot} className="mb-6 w-full max-w-2xl">
                     <h2 className="text-xl font-semibold mb-2">{timeSlot}</h2>
-                    {groupsList.map((group, index) => (
-                        <div key={index} className="mb-4 p-4 border rounded">
-                            <h3 className="font-medium mb-2">Group {index + 1}</h3>
+                    {groupsList.map((group) => (
+                        <div key={group.groupNumber} className="mb-4 p-4 border rounded">
+                            <h3 className="font-medium mb-2">Group {group.groupNumber}</h3>
                             <ul>
-                                {group.map((player, playerIndex) => (
+                                {group.players.map((player, playerIndex) => (
                                     <li key={playerIndex}>{player}</li>
                                 ))}
                             </ul>
