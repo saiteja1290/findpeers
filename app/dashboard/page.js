@@ -53,6 +53,9 @@ export default function Dashboard() {
                 <Link href="/my-matches" className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
                     My Matches
                 </Link>
+                <Link href="/groups" className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
+                    View Groups
+                </Link>
             </div>
             <button
                 onClick={handleLogout}

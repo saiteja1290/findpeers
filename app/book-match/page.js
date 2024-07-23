@@ -43,8 +43,10 @@ export default function BookMatch() {
                     className="w-full px-3 py-2 mb-3 text-sm leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:shadow-outline"
                 >
                     <option value="">Select time slot</option>
-                    <option value="4pm-7pm">4pm - 7pm</option>
-                    {/* Add more time slot options as needed */}
+                    <option value="9am-12pm">9am - 12pm</option>
+                    <option value="12pm-3pm">12pm - 3pm</option>
+                    <option value="3pm-6pm">3pm - 6pm</option>
+                    <option value="6pm-9pm">6pm - 9pm</option>
                 </select>
                 <button type="submit" className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                     Book Match
