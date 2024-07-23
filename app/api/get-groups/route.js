@@ -1,4 +1,3 @@
-// app/api/get-groups/route.js
 import { NextResponse } from 'next/server'
 import clientPromise from '@/lib/mongodb'
 import { ObjectId } from 'mongodb'
@@ -18,63 +17,38 @@ export async function GET(req) {
         if (!slotData) {
             return NextResponse.json({ error: 'No bookings found for this date' }, { status: 404 })
         }
-        
-        console.log('SlotData structure:', JSON.stringify(slotData, null, 2))
 
         const groups = {}
-        for (const [timeSlot, groupsData] of Object.entries(slotData.slots)) {
-            console.log(`TimeSlot: ${timeSlot}, GroupsData:`, JSON.stringify(groupsData, null, 2))
-            
-            groups[timeSlot] = await Promise.all(groupsData.map(async (group, index) => {
-                console.log(`Group ${index} structure:`, JSON.stringify(group, null, 2))
-                
-                if (!group || typeof group !== 'object') {
-                    console.error(`Invalid group at index ${index}:`, group)
-                    return { error: 'Invalid group data', group }
+        for (const [timeSlot, playerIds] of Object.entries(slotData.slots)) {
+            const validPlayerIds = playerIds.map(id => {
+                try {
+                    return new ObjectId(id)
+                } catch (error) {
+                    console.error('Invalid ObjectId:', id)
+                    return null
                 }
+            }).filter(id => id !== null)
 
-                if (!Array.isArray(group.players)) {
-                    console.error(`group.players is not an array for group ${index}:`, group.players)
-                    // Try to find players in alternative locations
-                    let players = []
-                    if (Array.isArray(group)) {
-                        players = group
-                    } else if (group.members && Array.isArray(group.members)) {
-                        players = group.members
-                    } else if (group.bookings && Array.isArray(group.bookings)) {
-                        players = group.bookings
-                    }
-                    
-                    if (players.length > 0) {
-                        console.log(`Found players in alternative location for group ${index}:`, players)
-                    } else {
-                        return {
-                            groupNumber: group.groupNumber || index,
-                            players: [],
-                            error: 'No valid players data found'
-                        }
-                    }
-                } else {
-                    players = group.players
-                }
+            const users = await usersCollection.find({ _id: { $in: validPlayerIds } }).toArray()
+            const usernames = users.map(user => user.username)
 
-                const playerIds = players.map(id => {
-                    try {
-                        return new ObjectId(id)
-                    } catch (error) {
-                        console.error('Invalid ObjectId:', id)
-                        return null
-                    }
-                }).filter(id => id !== null)
-                
-                const users = await usersCollection.find({ _id: { $in: playerIds } }).toArray()
-                const usernames = users.map(user => user.username)
-                return {
-                    groupNumber: group.groupNumber || index,
-                    players: usernames
-                }
-            }))
+            groups[timeSlot] = []
+
+            // Create Group 0 with up to 8 players
+            groups[timeSlot].push({
+                groupNumber: 0,
+                players: usernames.slice(0, 8)
+            })
+
+            // If there are more than 8 players, create Group 1 with the rest
+            if (usernames.length > 8) {
+                groups[timeSlot].push({
+                    groupNumber: 1,
+                    players: usernames.slice(8)
+                })
+            }
         }
+
         return NextResponse.json({ groups }, { status: 200 })
     } catch (error) {
         console.error('Get groups error:', error)
