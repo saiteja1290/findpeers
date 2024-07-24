@@ -6,10 +6,10 @@ import { useRouter } from 'next/navigation'
 
 export default function Groups() {
     const [date, setDate] = useState('')
-    const [groups, setGroups] = useState({})
+    const [slot, setSlot] = useState(null)
     const router = useRouter()
 
-    const fetchGroups = async () => {
+    const fetchSlot = async () => {
         if (!date) return
 
         const token = localStorage.getItem('token')
@@ -19,23 +19,23 @@ export default function Groups() {
         }
 
         try {
-            const response = await fetch(`/api/get-groups?date=${date}`, {
+            const response = await fetch(`/api/get-slot?date=${date}`, {
                 headers: { Authorization: `Bearer ${token}` },
             })
             if (response.ok) {
                 const data = await response.json()
-                setGroups(data.groups)
+                setSlot(data.slot)
             } else {
-                throw new Error('Failed to fetch groups')
+                throw new Error('Failed to fetch slot')
             }
         } catch (error) {
-            console.error('Error fetching groups:', error)
-            alert('Failed to fetch groups')
+            console.error('Error fetching slot:', error)
+            alert('Failed to fetch slot')
         }
     }
 
     useEffect(() => {
-        fetchGroups()
+        fetchSlot()
     }, [date])
 
     return (
@@ -47,19 +47,17 @@ export default function Groups() {
                 onChange={(e) => setDate(e.target.value)}
                 className="mb-4 px-3 py-2 border rounded"
             />
-            {Object.entries(groups).map(([timeSlot, groupsList]) => (
+            {slot && Object.entries(slot.slots).map(([timeSlot, playerIds]) => (
                 <div key={timeSlot} className="mb-6 w-full max-w-2xl">
                     <h2 className="text-xl font-semibold mb-2">{timeSlot}</h2>
-                    {groupsList.map((group) => (
-                        <div key={group.groupNumber} className="mb-4 p-4 border rounded">
-                            <h3 className="font-medium mb-2">Group {group.groupNumber}</h3>
-                            <ul>
-                                {group.players.map((player, playerIndex) => (
-                                    <li key={playerIndex}>{player}</li>
-                                ))}
-                            </ul>
-                        </div>
-                    ))}
+                    <div className="mb-4 p-4 border rounded">
+                        <h3 className="font-medium mb-2">Players</h3>
+                        <ul>
+                            {playerIds.map((playerId, index) => (
+                                <li key={index}>{playerId}</li>
+                            ))}
+                        </ul>
+                    </div>
                 </div>
             ))}
         </div>
