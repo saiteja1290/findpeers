@@ -1,7 +1,6 @@
-// app/my-matches/page.js
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function MyMatches() {
@@ -9,40 +8,44 @@ export default function MyMatches() {
     const router = useRouter()
 
     useEffect(() => {
-        const token = localStorage.getItem('token')
-        if (!token) {
-            router.push('/login')
-        } else {
-            fetchMatches(token)
-        }
-    }, [])
+        const fetchMatches = async () => {
+            const token = localStorage.getItem('token')
+            if (!token) {
+                router.push('/login')
+                return
+            }
 
-    const fetchMatches = async (token) => {
-        const response = await fetch('/api/my-matches', {
-            headers: { Authorization: `Bearer ${token}` },
-        })
-        if (response.ok) {
-            const matchesData = await response.json()
-            setMatches(matchesData)
-        } else {
-            alert('Failed to fetch matches')
+            const response = await fetch('/api/my-matches', {
+                headers: { Authorization: `Bearer ${token}` },
+            })
+            if (response.ok) {
+                const data = await response.json()
+                setMatches(data.matches)
+            } else {
+                console.error('Failed to fetch matches')
+            }
         }
-    }
+
+        fetchMatches()
+    }, [router])
+
+    if (!matches.length) return <div>Loading...</div>
 
     return (
-        <div className="flex min-h-screen flex-col items-center justify-center p-24">
-            <h1 className="text-2xl font-bold mb-4">My Matches</h1>
-            {matches.length === 0 ? (
-                <p>No matches booked yet.</p>
-            ) : (
-                <ul>
-                    {matches.map((match) => (
-                        <li key={match._id} className="mb-2">
-                            Date: {new Date(match.date).toLocaleDateString()}, Time: {match.timeSlot}
-                        </li>
-                    ))}
-                </ul>
-            )}
+        <div className="flex flex-col items-center justify-center min-h-screen p-6 text-black">
+            <h1 className="text-2xl font-bold mb-4 text-white">My Matches</h1>
+            {matches.map((match, index) => (
+                <div key={index} className="bg-white p-4 shadow-md rounded-md w-full max-w-xl mb-4">
+                    <h2 className="text-lg font-semibold">Date: {match.date}</h2>
+                    <p className="text-gray-600">Time Slot: {match.timeSlot}</p>
+                    <p className="text-gray-600">Group Number: {match.groupNumber}</p>
+                    <ul className="list-disc pl-6">
+                        {match.playerUsernames.map((username, idx) => (
+                            <li key={idx}>{username}</li>
+                        ))}
+                    </ul>
+                </div>
+            ))}
         </div>
     )
 }

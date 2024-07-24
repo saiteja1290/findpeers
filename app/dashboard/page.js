@@ -41,7 +41,7 @@ export default function Dashboard() {
         router.push('/login')
     }
 
-    if (!user) return <div>Loading...</div>
+    if (!user) return <div className='center'>Loading...</div>
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center p-24">

@@ -24,7 +24,7 @@ export async function GET(request) {
     const collection = db.collection(COLLECTION_NAME);
 
     const slots = await collection.findOne({ date });
-
+    console.log(slots)
     return new Response(JSON.stringify({ slots }), {
         status: 200,
         headers: {
